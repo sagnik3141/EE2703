@@ -50,7 +50,7 @@ try:
     
     # Analising each token and extracting information and storing it in a dictionary
     list_of_components = {'R':[], 'L':[], 'C':[], 'V':[], 'I':[], 'E':[], 'G':[], 'H':[], 'F':[]}
-
+    frequency = 0
     for line in l:
         s = line.split()
         if s[1] == 'GND':
@@ -92,6 +92,15 @@ try:
 
 except FileNotFoundError:
     print('Please enter a valid file name.')
+
+if len(list_of_components['E']) !=0 or len(list_of_components['G']) != 0 or len(list_of_components['H']) != 0 or len(list_of_components['F']) != 0:
+    print('This program does not work for controlled sources.')
+    exit()
+
+if (len(list_of_components['L'])!=0 or len(list_of_components['C'])!=0) and frequency == 0:
+    print('This program does not work for Inductors and Capacitors at DC.')
+    exit()
+
 # Find number of nodes
 
 nodes = 0
@@ -134,20 +143,24 @@ for r in list_of_components['R']:
     impedances.append(Impedance(float(r['value']), int(r['n1']), int(r['n2'])))
 
 for l in list_of_components['L']:
-
-    impedances.append(Impedance(complex(0, 2*np.pi*frequency*float(l['value'])), int(l['n1']), int(l['n2'])))
+    if frequency !=0:
+        impedances.append(Impedance(complex(0, 2*np.pi*frequency*float(l['value'])), int(l['n1']), int(l['n2'])))
+    if frequency == 0:
+        impedances.append(Impedance(1e-30, int(l['n1']), int(l['n2'])))
 
 for c in list_of_components['C']:
-
-    impedances.append(Impedance(1/complex(0, 2*np.pi*frequency*float(c['value'])), int(c['n1']), int(c['n2'])))
+    if frequency != 0:
+        impedances.append(Impedance(1/complex(0, 2*np.pi*frequency*float(c['value'])), int(c['n1']), int(c['n2'])))
+    if frequency == 0:
+        impedances.append(Impedance(1e30, int(c['n1']), int(c['n2'])))
 
 for v in list_of_components['V']:
     
-    voltage_sources.append(VS(float(v['value'])*cmath.exp(complex(0, float(v['phase']))), int(v['n1']), int(v['n2'])))
+    voltage_sources.append(VS(float(v['value'])*cmath.exp(complex(0, float(v['phase'])))/2, int(v['n1']), int(v['n2'])))
 
 for cs in list_of_components['I']:
 
-    current_sources.append(CS(float(cs['value'])*cmath.exp(complex(0, float(cs['phase']))), int(cs['n1']), int(cs(v['n2']))))
+    current_sources.append(CS(float(cs['value'])*cmath.exp(complex(0, float(cs['phase'])))/2, int(cs['n1']), int(cs(v['n2']))))
 
 
 # Setting up the matrix
@@ -172,27 +185,29 @@ for imp in impedances:
         exit()
 
 for v in voltage_sources:
-
+    temp = nodes
     if v.from_node != 0 and v.to_node != 0:
-        A[-1, v.to_node-1] = 1
-        A[-1, v.from_node-1] = -1
-        b[-1, 0] = v.value
-        A[v.to_node-1,-1]-=1
-        A[v.from_node-1,-1]+=1
+        A[temp, v.to_node-1] = 1
+        A[temp, v.from_node-1] = -1
+        b[temp, 0] = v.value
+        A[v.to_node-1,temp]-=1
+        A[v.from_node-1,temp]+=1
 
     elif v.from_node == 0 and v.to_node != 0:
-        A[-1, v.to_node-1] = 1
-        b[-1, 0] = v.value
-        A[v.to_node-1,-1]-=1
+        A[temp, v.to_node-1] = 1
+        b[temp, 0] = v.value
+        A[v.to_node-1,temp]-=1
 
     elif v.from_node != 0 and v.to_node == 0:
-        A[-1, v.from_node-1] = -1
-        b[-1, 0] = v.value
-        A[v.from_node-1,-1]+=1
+        A[temp, v.from_node-1] = -1
+        b[temp, 0] = v.value
+        A[v.from_node-1,temp]+=1
 
     else:
         print('Invalid Circuit')
         exit()
+
+    temp+=1
 
 for curr in current_sources:
 
@@ -216,5 +231,5 @@ x = np.linalg.solve(A,b.T.squeeze())
 
 for i in range(nodes):
     print(f'Voltage at node {i+1} = {x[i]}')
-    
-print(f'Current through Voltage Source = {x[-1]}')
+for i in range(nodes, len(b)):
+    print(f'Current through Voltage Source {i-nodes+1} = {x[-1]}')

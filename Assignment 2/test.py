@@ -172,27 +172,28 @@ for imp in impedances:
         exit()
 
 for v in voltage_sources:
-
+    temp = nodes
     if v.from_node != 0 and v.to_node != 0:
-        A[-1, v.to_node-1] = 1
-        A[-1, v.from_node-1] = -1
-        b[-1, 0] = v.value
-        A[v.to_node-1,-1]-=1
-        A[v.from_node-1,-1]+=1
+        A[temp, v.to_node-1] = 1
+        A[temp, v.from_node-1] = -1
+        b[temp, 0] = v.value
+        A[v.to_node-1,temp]-=1
+        A[v.from_node-1,temp]+=1
 
     elif v.from_node == 0 and v.to_node != 0:
-        A[-1, v.to_node-1] = 1
-        b[-1, 0] = v.value
-        A[v.to_node-1,-1]-=1
+        A[temp, v.to_node-1] = 1
+        b[temp, 0] = v.value
+        A[v.to_node-1,temp]-=1
 
     elif v.from_node != 0 and v.to_node == 0:
-        A[-1, v.from_node-1] = -1
-        b[-1, 0] = v.value
-        A[v.from_node-1,-1]+=1
+        A[temp, v.from_node-1] = -1
+        b[temp, 0] = v.value
+        A[v.from_node-1,temp]+=1
 
     else:
         print('Invalid Circuit')
         exit()
+    temp+=1
 
 for curr in current_sources:
 
