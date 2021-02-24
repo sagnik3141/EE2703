@@ -153,14 +153,17 @@ for c in list_of_components['C']:
         impedances.append(Impedance(1/complex(0, 2*np.pi*frequency*float(c['value'])), int(c['n1']), int(c['n2'])))
     if frequency == 0:
         impedances.append(Impedance(1e30, int(c['n1']), int(c['n2'])))
+factor = 2
+if frequency == 0:
+    factor = 1
 
 for v in list_of_components['V']:
     
-    voltage_sources.append(VS(float(v['value'])*cmath.exp(complex(0, float(v['phase'])))/2, int(v['n1']), int(v['n2'])))
+    voltage_sources.append(VS(float(v['value'])*cmath.exp(complex(0, float(v['phase'])))/factor, int(v['n1']), int(v['n2'])))
 
 for cs in list_of_components['I']:
 
-    current_sources.append(CS(float(cs['value'])*cmath.exp(complex(0, float(cs['phase'])))/2, int(cs['n1']), int(cs(v['n2']))))
+    current_sources.append(CS(float(cs['value'])*cmath.exp(complex(0, float(cs['phase'])))/factor, int(cs['n1']), int(cs(v['n2']))))
 
 
 # Setting up the matrix
