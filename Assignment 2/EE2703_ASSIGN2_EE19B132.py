@@ -159,11 +159,11 @@ if frequency == 0:
 
 for v in list_of_components['V']:
     
-    voltage_sources.append(VS(float(v['value'])*cmath.exp(complex(0, float(v['phase'])))/factor, int(v['n1']), int(v['n2'])))
+    voltage_sources.append(VS(float(v['value'])*cmath.exp(complex(0, float(v['phase'])*np.pi/180))/factor, int(v['n1']), int(v['n2'])))
 
 for cs in list_of_components['I']:
 
-    current_sources.append(CS(float(cs['value'])*cmath.exp(complex(0, float(cs['phase'])))/factor, int(cs['n1']), int(cs(v['n2']))))
+    current_sources.append(CS(float(cs['value'])*cmath.exp(complex(0, float(cs['phase'])*np.pi/180))/factor, int(cs['n1']), int(cs(v['n2']))))
 
 
 # Setting up the matrix
